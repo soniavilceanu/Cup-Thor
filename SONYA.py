@@ -6,4 +6,10 @@ while True:
 
 
 
-print("Sonja nu mai e sexy")
+
+
+LAPTE
+
+CACAO
+
+TEST
