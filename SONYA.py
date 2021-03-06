@@ -17,3 +17,9 @@ TEST
 
 print("NU")
 
+objkb
+
+
+mljlkm
+
+onlknk
