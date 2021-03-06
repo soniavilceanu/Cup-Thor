@@ -1,3 +1,4 @@
+
 #soijafpioasj
 
 while True:
@@ -13,3 +14,6 @@ LAPTE
 CACAO
 
 TEST
+
+print("NU")
+
