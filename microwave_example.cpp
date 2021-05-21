@@ -78,6 +78,10 @@ private:
         Routes::Get(router, "/auth", Routes::bind(&MicrowaveEndpoint::doAuth, this));
         Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&MicrowaveEndpoint::setSetting, this));
         Routes::Get(router, "/settings/:settingName/", Routes::bind(&MicrowaveEndpoint::getSetting, this));
+        
+        //COCO-temperatura
+        
+        //END-COCO
     }
 
     
@@ -161,6 +165,28 @@ private:
                     return 1;
                 }
             }
+
+
+
+            if(name == 'temperature'){
+                temperature.name = name;
+
+                float valoare;
+                valoare = atoi(value);
+
+
+                if (valoare > 300 || valoare < 0)
+                {
+                    return 0;
+                }
+
+                else
+                {
+                    return 1;   
+                }
+                
+            }
+
             return 0;
         }
 
