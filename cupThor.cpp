@@ -8,6 +8,9 @@
 #include <pistache/endpoint.h>
 #include <pistache/common.h>
 #include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 using namespace std;
 using namespace Pistache;
@@ -153,6 +156,38 @@ private:
                     return 1;
                 }
             }
+
+
+
+            if(name == "temperature"){
+                temperature.name = name;
+
+                float valoare;
+                valoare = std::stof(value);
+
+
+                if (valoare <= 300 || valoare >= 0)
+                {
+                    temperature.value = valoare;
+                    return 1;   
+                }
+                
+            }
+
+            if (name == "ambient_light"){
+                ambient_light.name = name;
+
+                if (value == "true"){
+                    ambient_light.value = true;
+                    return 1;
+                }
+                
+                if (value == "false"){
+                    ambient_light.value = false;
+                    return 1;
+                }
+            }
+
             return 0;
         }
 
@@ -161,6 +196,16 @@ private:
             if (name == "defrost"){
                 return std::to_string(defrost.value);
             }
+
+
+            else if (name == "temperature"){
+                return std::to_string(temperature.value);
+            }
+
+            else if (name == "ambient_light"){
+                return std::to_string(ambient_light.value);
+            }
+
             else{
                 return "";
             }
@@ -172,6 +217,18 @@ private:
             std::string name;
             bool value;
         }defrost;
+
+
+        struct temperatureSetting{
+            std::string name;
+            int value;
+        }temperature;
+
+
+        struct bec_ambientalSetting{
+            std::string name;
+            bool value;
+        }ambient_light;
     };
 
     // Create the lock which prevents concurrent editing of the same variable
