@@ -225,7 +225,7 @@ private:
         }temperature;
 
 
-        struct bec_ambientalSetting{
+        struct ambient_lightSetting{
             std::string name;
             bool value;
         }ambient_light;
