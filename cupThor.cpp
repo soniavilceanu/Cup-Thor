@@ -166,17 +166,26 @@ private:
                 valoare = std::stof(value);
 
 
-                if (valoare > 300 || valoare < 0)
-                {
-                    return 0;
-                }
-
-                else
+                if (valoare <= 300 || valoare >= 0)
                 {
                     temperature.value = valoare;
                     return 1;   
                 }
                 
+            }
+
+            if (name == "ambient_light"){
+                ambient_light.name = name;
+
+                if (value == "true"){
+                    ambient_light.value = true;
+                    return 1;
+                }
+                
+                if (value == "false"){
+                    ambient_light.value = false;
+                    return 1;
+                }
             }
 
             return 0;
@@ -191,6 +200,10 @@ private:
 
             else if (name == "temperature"){
                 return std::to_string(temperature.value);
+            }
+
+            else if (name == "ambient_light"){
+                return std::to_string(ambient_light.value);
             }
 
             else{
@@ -210,6 +223,12 @@ private:
             std::string name;
             int value;
         }temperature;
+
+
+        struct bec_ambientalSetting{
+            std::string name;
+            bool value;
+        }ambient_light;
     };
 
     // Create the lock which prevents concurrent editing of the same variable
