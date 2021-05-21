@@ -1,11 +1,4 @@
-/*
-   Rares Cristea, 12.03.2021
-   Example of a REST endpoint with routing
-   using Mathieu Stefani's example, 07 février 2016
-*/
-
 #include <algorithm>
-
 #include <pistache/net.h>
 #include <pistache/http.h>
 #include <pistache/peer.h>
@@ -14,8 +7,10 @@
 #include <pistache/router.h>
 #include <pistache/endpoint.h>
 #include <pistache/common.h>
-
 #include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 using namespace std;
 using namespace Pistache;
@@ -43,9 +38,9 @@ namespace Generic {
 }
 
 // Definition of the MicrowaveEnpoint class 
-class MicrowaveEndpoint {
+class CupThorEndpoint {
 public:
-    explicit MicrowaveEndpoint(Address addr)
+    explicit CupThorEndpoint(Address addr)
         : httpEndpoint(std::make_shared<Http::Endpoint>(addr))
     { }
 
@@ -75,13 +70,9 @@ private:
         // Defining various endpoints
         // Generally say that when http://localhost:9080/ready is called, the handleReady function should be called. 
         Routes::Get(router, "/ready", Routes::bind(&Generic::handleReady));
-        Routes::Get(router, "/auth", Routes::bind(&MicrowaveEndpoint::doAuth, this));
-        Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&MicrowaveEndpoint::setSetting, this));
-        Routes::Get(router, "/settings/:settingName/", Routes::bind(&MicrowaveEndpoint::getSetting, this));
-        
-        //COCO-temperatura
-        
-        //END-COCO
+        Routes::Get(router, "/auth", Routes::bind(&CupThorEndpoint::doAuth, this));
+        Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&CupThorEndpoint::setSetting, this));
+        Routes::Get(router, "/settings/:settingName/", Routes::bind(&CupThorEndpoint::getSetting, this));
     }
 
     
@@ -102,7 +93,7 @@ private:
         auto settingName = request.param(":settingName").as<std::string>();
 
         // This is a guard that prevents editing the same value by two concurent threads. 
-        Guard guard(microwaveLock);
+        Guard guard(cupthorLock);
 
         
         string val = "";
@@ -112,7 +103,7 @@ private:
         }
 
         // Setting the microwave's setting to value
-        int setResponse = mwv.set(settingName, val);
+        int setResponse = cth.set(settingName, val);
 
         // Sending some confirmation or error response.
         if (setResponse == 1) {
@@ -128,9 +119,9 @@ private:
     void getSetting(const Rest::Request& request, Http::ResponseWriter response){
         auto settingName = request.param(":settingName").as<std::string>();
 
-        Guard guard(microwaveLock);
+        Guard guard(cupthorLock);
 
-        string valueSetting = mwv.get(settingName);
+        string valueSetting = cth.get(settingName);
 
         if (valueSetting != "") {
 
@@ -148,9 +139,9 @@ private:
     }
 
     // Defining the class of the Microwave. It should model the entire configuration of the Microwave
-    class Microwave {
+    class CupThor {
     public:
-        explicit Microwave(){ }
+        explicit CupThor(){ }
 
         // Setting the value for one of the settings. Hardcoded for the defrosting option
         int set(std::string name, std::string value){
@@ -168,11 +159,11 @@ private:
 
 
 
-            if(name == 'temperature'){
+            if(name == "temperature"){
                 temperature.name = name;
 
                 float valoare;
-                valoare = atoi(value);
+                valoare = std::stof(value);
 
 
                 if (valoare > 300 || valoare < 0)
@@ -182,6 +173,7 @@ private:
 
                 else
                 {
+                    temperature.value = valoare;
                     return 1;   
                 }
                 
@@ -195,6 +187,12 @@ private:
             if (name == "defrost"){
                 return std::to_string(defrost.value);
             }
+
+
+            else if (name == "temperature"){
+                return std::to_string(temperature.value);
+            }
+
             else{
                 return "";
             }
@@ -206,15 +204,21 @@ private:
             std::string name;
             bool value;
         }defrost;
+
+
+        struct temperatureSetting{
+            std::string name;
+            int value;
+        }temperature;
     };
 
     // Create the lock which prevents concurrent editing of the same variable
     using Lock = std::mutex;
     using Guard = std::lock_guard<Lock>;
-    Lock microwaveLock;
+    Lock cupthorLock;
 
     // Instance of the microwave model
-    Microwave mwv;
+    CupThor cth;
 
     // Defining the httpEndpoint and a router.
     std::shared_ptr<Http::Endpoint> httpEndpoint;
@@ -253,7 +257,7 @@ int main(int argc, char *argv[]) {
     cout << "Using " << thr << " threads" << endl;
 
     // Instance of the class that defines what the server can do.
-    MicrowaveEndpoint stats(addr);
+    CupThorEndpoint stats(addr);
 
     // Initialize and start the server
     stats.init(thr);
