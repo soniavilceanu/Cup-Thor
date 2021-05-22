@@ -116,6 +116,9 @@ private:
                 response.send(Http::Code::Ok, "Silent mode is deactivated. \nAmbient light is turned on and ventilation is unchanged.");
 
         }
+        else if(setResponse == 3){
+            response.send(Http::Code::Ok, "Silent mode is activated! \nTurn it off and try again.");
+        }
         else {
             response.send(Http::Code::Not_Found, settingName + " was not found and or '" + val + "' was not a valid value ");
         }
@@ -185,8 +188,17 @@ private:
                 ambient_light.name = name;
 
                 if (value == "true"){
+                    if(silent_mode.value)
+                    {
+                        ambient_light.value = false;
+                        return 3;
+                    }
+                     
+                    else
+                    {
                     ambient_light.value = true;
                     return 1;
+                    }
                 }
                 
                 if (value == "false"){
@@ -203,8 +215,13 @@ private:
                 valoare = std::stoi(value);
 
                 if (valoare >= 0 && valoare <=6){
+                    if (silent_mode.value && valoare > 2)
+                        return 3;
+                    else
+                    {
                     ventilation.value = valoare;
                     return 1;
+                    }
                 }
             }
 
