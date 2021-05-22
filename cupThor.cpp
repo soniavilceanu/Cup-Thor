@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <chrono>
 
 using namespace std;
 using namespace Pistache;
@@ -73,6 +74,10 @@ private:
         Routes::Get(router, "/auth", Routes::bind(&CupThorEndpoint::doAuth, this));
         Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&CupThorEndpoint::setSetting, this));
         Routes::Get(router, "/settings/:settingName/", Routes::bind(&CupThorEndpoint::getSetting, this));
+
+
+        Routes::Post(router, "/sensors/:sensorName/:value", Routes::bind(&CupThorEndpoint::setSensor, this));
+        Routes::Get(router, "/sensors/:sensorName/", Routes::bind(&CupThorEndpoint::getSensor, this));
     }
 
     
@@ -85,6 +90,66 @@ private:
         // Send the response
         response.send(Http::Code::Ok);
     }
+
+// Endpoint to configure one of the Microwave's settings.
+    void setSensor(const Rest::Request& request, Http::ResponseWriter response){
+        // You don't know what the parameter content that you receive is, but you should
+        // try to cast it to some data structure. Here, I cast the settingName to string.
+        auto sensorName = request.param(":sensorName").as<std::string>();
+
+        // This is a guard that prevents editing the same value by two concurent threads. 
+        Guard guard(cupthorLock);
+
+        
+        string val = "";
+        if (request.hasParam(":value")) {
+            auto value = request.param(":value");
+            val = value.as<string>();
+        }
+
+        // Setting the microwave's setting to value
+        int setResponse = cth.set(sensorName, val);
+
+        // Sending some confirmation or error response.
+        if (setResponse == 1) {
+            response.send(Http::Code::Ok, sensorName + " was set to " + val);
+        }
+
+
+        else {
+            response.send(Http::Code::Not_Found, sensorName + " was not found and or '" + val + "' was not a valid value ");
+        }
+
+    }
+
+
+
+
+    // Setting to get the settings value of one of the configurations of the Microwave
+    void getSensor(const Rest::Request& request, Http::ResponseWriter response){
+        auto sensorName = request.param(":sensorName").as<std::string>();
+
+        Guard guard(cupthorLock);
+
+        string valueSensor = cth.get(sensorName);
+
+        if (valueSensor != "") {
+
+            // In this response I also add a couple of headers, describing the server that sent this response, and the way the content is formatted.
+            using namespace Http;
+            response.headers()
+                        .add<Header::Server>("pistache/0.1")
+                        .add<Header::ContentType>(MIME(Text, Plain));
+
+            response.send(Http::Code::Ok, sensorName + " is " + valueSensor);
+        }
+        else {
+            response.send(Http::Code::Not_Found, sensorName + " was not found");
+        }
+    }
+
+
+
 
     // Endpoint to configure one of the Microwave's settings.
     void setSetting(const Rest::Request& request, Http::ResponseWriter response){
@@ -151,7 +216,20 @@ private:
     // Defining the class of the Microwave. It should model the entire configuration of the Microwave
     class CupThor {
     public:
-        explicit CupThor(){ }
+        explicit CupThor(){ 
+
+        this -> silent_mode.name = "silent_mode";
+        this -> silent_mode.value = false;
+
+        this -> ventilation.name = "ventilation";
+        this -> ventilation.value = 0;
+
+        this -> ambient_light.name = "ambient_light";
+        this -> ambient_light.value = false;
+
+        this -> desired_temperature.name = "desired_temperature";
+        this -> desired_temperature.value = 20;
+        }
 
         // Setting the value for one of the settings. Hardcoded for the defrosting option
         int set(std::string name, std::string value){
@@ -169,17 +247,18 @@ private:
 
 
 
-            if(name == "temperature"){
-                temperature.name = name;
+            if(name == "desired_temperature"){
+                desired_temperature.name = name;
 
-                float valoare;
+                double valoare;
                 valoare = std::stof(value);
 
 
-                if (valoare <= 300 || valoare >= 0)
+                if (valoare <= 300 || valoare >= 20)
                 {
-                    temperature.value = valoare;
-                    return 1;   
+                    desired_temperature.value = valoare;
+                    thermostat_cupthor.modifica_temperatura_la(valoare);
+                    return 1;
                 }
                 
             }
@@ -249,13 +328,15 @@ private:
 
         // Getter
         string get(std::string name){
+
+            //SETTINGS
             if (name == "defrost"){
                 return std::to_string(defrost.value);
             }
 
 
-            else if (name == "temperature"){
-                return std::to_string(temperature.value);
+            else if (name == "desired_temperature"){
+                return std::to_string(desired_temperature.value);
             }
 
             else if (name == "ambient_light"){
@@ -270,12 +351,66 @@ private:
                 return std::to_string(silent_mode.value);
             }
 
+            //SENSORS
+
+            if (name == "thermostat"){
+                return std::to_string(thermostat_cupthor.get_temperatura());
+            }
+
+
             else{
                 return "";
             }
         }
 
+
     private:
+
+        class ThermostatCupThor{
+            public:
+
+                ThermostatCupThor(){
+                    this -> valoare_dorita_stored = 20;
+                    this -> temperatura_la_ultima_comanda = 20;
+                    this -> timpul_ultimei_comenzi = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::system_clock::now().time_since_epoch()).count();
+                }
+
+                void modifica_temperatura_la(double valoare_dorita){
+                    this -> temperatura_la_ultima_comanda = this -> get_temperatura();
+                    this -> timpul_ultimei_comenzi = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::system_clock::now().time_since_epoch()).count();
+                    this -> valoare_dorita_stored = valoare_dorita;
+                    return;
+                }
+
+                int get_temperatura(){
+
+                    double timp_actual = std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+
+                    if ((timp_actual - (this -> timpul_ultimei_comenzi)) > abs(((this -> valoare_dorita_stored) - (this -> temperatura_la_ultima_comanda)))){
+
+                        return this -> valoare_dorita_stored;
+                    }
+
+                    else
+                    {
+                        if (valoare_dorita_stored > temperatura_la_ultima_comanda)
+                            return (this -> temperatura_la_ultima_comanda) + (timp_actual - (this -> timpul_ultimei_comenzi));
+                        
+                        else
+                            return (this -> temperatura_la_ultima_comanda) - (timp_actual - (this -> timpul_ultimei_comenzi));
+                    }
+
+                }
+
+            private:
+                double valoare_dorita_stored;
+                double temperatura_la_ultima_comanda;
+                double timpul_ultimei_comenzi;
+
+        }thermostat_cupthor;
+
+
         // Defining and instantiating settings.
         struct boolSetting{
             std::string name;
@@ -285,8 +420,8 @@ private:
 
         struct temperatureSetting{
             std::string name;
-            float value;
-        }temperature;
+            double value;
+        }desired_temperature;
 
 
         struct ambient_lightSetting{
