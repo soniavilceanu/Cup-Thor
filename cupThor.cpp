@@ -188,6 +188,19 @@ private:
                 }
             }
 
+
+            if (name == "ventilation"){
+                ventilation.name = name;
+
+                int valoare;
+                valoare = std::stoi(value);
+
+                if (valoare >= 0 && valoare <=6){
+                    ventilation.value = valoare;
+                    return 1;
+                }
+            }
+
             return 0;
         }
 
@@ -206,6 +219,10 @@ private:
                 return std::to_string(ambient_light.value);
             }
 
+            else if (name == "ventilation"){
+                return std::to_string(ventilation.value);
+            }
+
             else{
                 return "";
             }
@@ -221,7 +238,7 @@ private:
 
         struct temperatureSetting{
             std::string name;
-            int value;
+            float value;
         }temperature;
 
 
@@ -229,6 +246,12 @@ private:
             std::string name;
             bool value;
         }ambient_light;
+
+
+        struct ventilationSetting{
+            std::string name;
+            int value;
+        }ventilation;
     };
 
     // Create the lock which prevents concurrent editing of the same variable
