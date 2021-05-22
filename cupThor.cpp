@@ -109,6 +109,13 @@ private:
         if (setResponse == 1) {
             response.send(Http::Code::Ok, settingName + " was set to " + val);
         }
+        else if(setResponse == 2){
+            if (val == "true")
+                response.send(Http::Code::Ok, "Silent mode is activated. \nAmbient light is turned off and ventilation is set to at most 2.");
+            else 
+                response.send(Http::Code::Ok, "Silent mode is deactivated. \nAmbient light is turned on and ventilation is unchanged.");
+
+        }
         else {
             response.send(Http::Code::Not_Found, settingName + " was not found and or '" + val + "' was not a valid value ");
         }
@@ -201,6 +208,25 @@ private:
                 }
             }
 
+            if (name == "silent_mode"){
+                silent_mode.name = name;
+
+                if (value == "true"){
+                    silent_mode.value = true;
+                    ambient_light.value = false;
+                    if (ventilation.value > 2)
+                        ventilation.value = 2;
+
+                    return 2;
+                }
+                
+                if (value == "false"){
+                    silent_mode.value = false;
+                    ambient_light.value = true;
+                    return 2;
+                }
+            }
+
             return 0;
         }
 
@@ -221,6 +247,10 @@ private:
 
             else if (name == "ventilation"){
                 return std::to_string(ventilation.value);
+            }
+
+            else if (name == "silent_mode"){
+                return std::to_string(silent_mode.value);
             }
 
             else{
@@ -252,6 +282,12 @@ private:
             std::string name;
             int value;
         }ventilation;
+
+
+        struct silent_modeSetting{
+            std::string name;
+            bool value;
+        }silent_mode;
     };
 
     // Create the lock which prevents concurrent editing of the same variable
