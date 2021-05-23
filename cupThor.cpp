@@ -15,6 +15,8 @@
 #include <vector>
 #include <fstream>
 #include <iterator>
+#include <thread>
+#include <random>
 
 using namespace std;
 using namespace Pistache;
@@ -234,6 +236,8 @@ private:
 
         this -> desired_temperature.name = "desired_temperature";
         this -> desired_temperature.value = 20;
+
+        std::thread t1();
         }
 
         // Setting the value for one of the settings. Hardcoded for the defrosting option
@@ -383,7 +387,9 @@ private:
                 return camera.get_feed();
             }
 
-
+            if(name == "senzor_fum"){
+                return std::to_string(senzor_fum.Scoate_fum());
+            }
             else{
                 return "";
             }
@@ -436,6 +442,29 @@ private:
                 double timpul_ultimei_comenzi;
 
         }thermostat_cupthor;
+
+        class Senzor_fum
+        {
+            public:
+                Senzor_fum()
+                {
+                    this -> a_luat_foc = false;
+                }
+
+                int Scoate_fum()
+                {
+                    int nr = rand() % 1000;
+                    if(nr == 0)
+                    {
+                        a_luat_foc = true;
+                        return 1;
+                    }
+                    return 0;
+                }
+            
+            private:
+                bool a_luat_foc;
+        }senzor_fum;
 
         //Simulare camera cupthor
         class Camera{
@@ -584,6 +613,7 @@ private:
                 }
 
         }camera;
+
 
 
         // Defining and instantiating settings.
