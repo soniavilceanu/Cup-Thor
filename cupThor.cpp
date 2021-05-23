@@ -81,6 +81,12 @@ private:
 
         Routes::Post(router, "/sensors/:sensorName/:value", Routes::bind(&CupThorEndpoint::setSensor, this));
         Routes::Get(router, "/sensors/:sensorName/", Routes::bind(&CupThorEndpoint::getSensor, this));
+
+
+        Routes::Get(router, "/mediaplayer/", Routes::bind(&CupThorEndpoint::getMediaPlayer, this));
+        Routes::Post(router, "/mediaplayer/:mediaCommandName/", Routes::bind(&CupThorEndpoint::setMediaCommand, this));
+        Routes::Post(router, "/mediaplayer/:mediaCommandName/:value", Routes::bind(&CupThorEndpoint::setMediaCommandsong, this));
+
     }
 
     
