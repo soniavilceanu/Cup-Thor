@@ -12,6 +12,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <chrono>
+#include <vector>
+#include <fstream>
+#include <iterator>
 
 using namespace std;
 using namespace Pistache;
@@ -358,6 +361,11 @@ private:
             }
 
 
+            if (name == "camera"){
+                return camera.get_feed();
+            }
+
+
             else{
                 return "";
             }
@@ -409,6 +417,154 @@ private:
                 double timpul_ultimei_comenzi;
 
         }thermostat_cupthor;
+
+
+        class Camera{
+            public:
+                Camera(){
+
+                }
+
+                std::string get_feed(){
+                        
+                        struct pixel{
+                                unsigned char r;
+                                unsigned char g;
+                                unsigned char b;
+                            };
+
+                        struct{
+                            std::vector<unsigned char> header;
+                            std::vector<pixel> pixeli;
+                        }imagine;
+
+                        std::ifstream input("./CameraFakeInput/peppers.bmp", std::ios::binary);
+                        std::ofstream output("./OutputCamera/picture.bmp", std::ios::binary);
+                        
+                        std::vector<unsigned char> buffer (std::istreambuf_iterator<char>(input), {});
+                        
+                        //simulez output-uri diferite
+
+                        int variante = rand()%11;
+
+                        if (variante != 0)
+                        {
+                            //hardcodat pentru imaginea noastra
+                            int trio = 0;
+                            pixel pixi;
+                            for (int i = 0 ; i<= buffer.size(); i++)
+                            {   
+                                if (i <= 54)
+                                    imagine.header.push_back(buffer[i]);
+                                
+                                else if (trio == 0)
+                                {
+                                    pixi.b = buffer[i];
+                                    trio++;
+                                }
+                                else if (trio == 1)
+                                {
+                                    pixi.g = buffer[i];
+                                    trio++;
+                                }
+                                else if (trio == 2)
+                                {
+                                    pixi.r = buffer[i];
+                                    trio = 0;
+
+                                    pixel aux;
+                                    aux.r = pixi.r;
+                                    aux.g = pixi.g;
+                                    aux.b = pixi.b;
+
+                                    imagine.pixeli.push_back(aux);
+                                }
+
+                            }
+
+                            for (int i=0; i<= imagine.header.size(); i++)
+                            {
+                                output << imagine.header[i];
+                            }
+
+                            for (int i=0; i<= imagine.pixeli.size(); i++)
+                            {
+                                if (variante == 1){
+                                output << imagine.pixeli[i].g;
+                                output << imagine.pixeli[i].g;
+                                output << imagine.pixeli[i].b;
+                                }
+                                else if (variante == 2){
+                                output << imagine.pixeli[i].r;
+                                output << imagine.pixeli[i].g;
+                                output << imagine.pixeli[i].g;
+                                }
+
+                                else if (variante == 3){
+                                output << imagine.pixeli[i].g;
+                                output << imagine.pixeli[i].g;
+                                output << imagine.pixeli[i].g;
+                                }
+
+                                else if (variante == 4){
+                                output << imagine.pixeli[i].r;
+                                output << imagine.pixeli[i].g;
+                                output << imagine.pixeli[i].b;
+                                }
+
+                                else if (variante == 5){
+                                output << imagine.pixeli[i].r;
+                                output << imagine.pixeli[i].r;
+                                output << imagine.pixeli[i].b;
+                                }
+
+                                else if (variante == 6){
+                                output << imagine.pixeli[i].r;
+                                output << imagine.pixeli[i].r;
+                                output << imagine.pixeli[i].r;
+                                }
+
+                                else if (variante == 7){
+                                output << imagine.pixeli[i].r;
+                                output << imagine.pixeli[i].g;
+                                output << imagine.pixeli[i].r;
+                                }
+
+                                else if (variante == 8){
+                                output << imagine.pixeli[i].b;
+                                output << imagine.pixeli[i].b;
+                                output << imagine.pixeli[i].b;
+                                }
+
+                                else if (variante == 9){
+                                output << imagine.pixeli[i].r;
+                                output << imagine.pixeli[i].b;
+                                output << imagine.pixeli[i].b;
+                                }
+
+                                else if (variante == 10){
+                                output << imagine.pixeli[i].b;
+                                output << imagine.pixeli[i].g;
+                                output << imagine.pixeli[i].b;
+                                }
+                            }
+                        }
+                        else
+                        {
+
+                        for (int i =0 ; i<= buffer.size() ; i++)
+                            {
+                                output << buffer[i];
+                            }
+                        }
+
+                        input.close();
+                        output.close();
+                    return "storing photo in folder";
+                        
+                }
+
+        }camera;
 
 
         // Defining and instantiating settings.
