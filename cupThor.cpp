@@ -95,6 +95,8 @@ private:
     }
 
 // Endpoint to configure one of the Microwave's settings.
+
+    // In mod normal nu ar trebui sa se intre pe aceasta sectiune de cod deoarece senzorii nu ar trebui setati ci doar interogati.
     void setSensor(const Rest::Request& request, Http::ResponseWriter response){
         // You don't know what the parameter content that you receive is, but you should
         // try to cast it to some data structure. Here, I cast the settingName to string.
@@ -111,7 +113,7 @@ private:
         }
 
         // Setting the microwave's setting to value
-        int setResponse = cth.set(sensorName, val);
+        int setResponse = cth.set_sensor(sensorName, val);
 
         // Sending some confirmation or error response.
         if (setResponse == 1) {
@@ -134,7 +136,7 @@ private:
 
         Guard guard(cupthorLock);
 
-        string valueSensor = cth.get(sensorName);
+        string valueSensor = cth.get_sensor(sensorName);
 
         if (valueSensor != "") {
 
@@ -171,7 +173,7 @@ private:
         }
 
         // Setting the microwave's setting to value
-        int setResponse = cth.set(settingName, val);
+        int setResponse = cth.set_setting(settingName, val);
 
         // Sending some confirmation or error response.
         if (setResponse == 1) {
@@ -199,7 +201,7 @@ private:
 
         Guard guard(cupthorLock);
 
-        string valueSetting = cth.get(settingName);
+        string valueSetting = cth.get_setting(settingName);
 
         if (valueSetting != "") {
 
@@ -235,7 +237,7 @@ private:
         }
 
         // Setting the value for one of the settings. Hardcoded for the defrosting option
-        int set(std::string name, std::string value){
+        int set_setting(std::string name, std::string value){
             if(name == "defrost"){
                 defrost.name = name;
                 if(value == "true"){
@@ -329,8 +331,15 @@ private:
             return 0;
         }
 
+        //SET-SENSOR - nu ar trebui implementat nimic aici
+        int set_sensor(std::string name, std::string value){
+
+            
+            return 0;
+        }
+
         // Getter
-        string get(std::string name){
+        string get_setting(std::string name){
 
             //SETTINGS
             if (name == "defrost"){
@@ -354,8 +363,17 @@ private:
                 return std::to_string(silent_mode.value);
             }
 
-            //SENSORS
+            
 
+            else{
+                return "";
+            }
+        }
+
+
+        string get_sensor(std::string name){
+            
+            //SENSORS
             if (name == "thermostat"){
                 return std::to_string(thermostat_cupthor.get_temperatura());
             }
@@ -369,6 +387,7 @@ private:
             else{
                 return "";
             }
+
         }
 
 
