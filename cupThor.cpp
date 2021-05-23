@@ -15,6 +15,7 @@
 #include <vector>
 #include <fstream>
 #include <iterator>
+#include <random>
 
 using namespace std;
 using namespace Pistache;
@@ -81,6 +82,12 @@ private:
 
         Routes::Post(router, "/sensors/:sensorName/:value", Routes::bind(&CupThorEndpoint::setSensor, this));
         Routes::Get(router, "/sensors/:sensorName/", Routes::bind(&CupThorEndpoint::getSensor, this));
+                
+        Routes::Post(router, "/cook/:cookName/", Routes::bind(&CupThorEndpoint::setCook, this));
+        Routes::Post(router, "/cook/:cookName/:value", Routes::bind(&CupThorEndpoint::setCookMode, this));
+        Routes::Get(router, "/cook/", Routes::bind(&CupThorEndpoint::getCook, this));
+
+        
     }
 
     
@@ -97,6 +104,85 @@ private:
 // Endpoint to configure one of the Microwave's settings.
 
     // In mod normal nu ar trebui sa se intre pe aceasta sectiune de cod deoarece senzorii nu ar trebui setati ci doar interogati.
+    void setCook(const Rest::Request& request, Http::ResponseWriter response){
+        auto cookName = request.param(":cookName").as<std::string>();
+
+        Guard guard(cupthorLock);
+        
+        int setResponse = cth.set_cook(cookName);
+        if (setResponse == 1) {
+            response.send(Http::Code::Ok, "Cook mode was set to " + cookName);
+        }
+        else if (setResponse == 2){
+            response.send(Http::Code::Ok, "Silent mode is activated! \nTurn it off and try again.");
+        }
+
+        else {
+            response.send(Http::Code::Not_Found, cookName + " was not found and or '" + cookName + "' was not a valid value ");
+        }
+
+
+    }
+    void setCookMode(const Rest::Request& request, Http::ResponseWriter response){
+        auto cookName = request.param(":cookName").as<std::string>();
+
+        Guard guard(cupthorLock);
+
+        string val = "";
+        if (request.hasParam(":value")) {
+            auto value = request.param(":value");
+            val = value.as<string>();
+        }
+
+
+        int setResponse = cth.set_cook_mode(cookName, val);
+
+        if (setResponse == 1){
+
+            response.send(Http::Code::Ok, "Cook mode was set to " + cookName + "with keep-food-warm");
+
+        }
+        else if (setResponse == 3){
+            response.send(Http::Code::Ok, "Cook mode was set to " + cookName + "wihtout keep-food-warm");
+        }
+        else if (setResponse == 2){
+            response.send(Http::Code::Ok, "Silent mode is activated! \nTurn it off and try again.");
+        }
+        else{
+
+            response.send(Http::Code::Not_Found, "Error! Current cook mode cannot be set");
+
+        }
+
+    }
+    void getCook(const Rest::Request& request, Http::ResponseWriter response){
+
+        Guard guard(cupthorLock);
+
+        string cook_mode_checker = cth.get_cook_mode_status();
+        string whats_cook = cth.get_what_is_cooking();
+
+        if (whats_cook != "") {
+
+          
+            using namespace Http;
+            response.headers()
+                        .add<Header::Server>("pistache/0.1")
+                        .add<Header::ContentType>(MIME(Text, Plain));
+            if (cook_mode_checker != "")
+                response.send(Http::Code::Ok, "Currently cooking: " + whats_cook + " keep-warm-food:ON");
+            else
+                response.send(Http::Code::Ok, "Currently cooking: " + whats_cook + " keep-warm-food:OFF");
+        }
+        else {
+            response.send(Http::Code::Not_Found, + " was not found");
+        }
+
+    }
+
+
+
+
     void setSensor(const Rest::Request& request, Http::ResponseWriter response){
         // You don't know what the parameter content that you receive is, but you should
         // try to cast it to some data structure. Here, I cast the settingName to string.
@@ -330,7 +416,70 @@ private:
 
             return 0;
         }
+        int set_cook(std::string name){
+            if (cantar_cupthor.get_valoare_greutate() > 0){
+                if (name == "chicken"){
 
+                    if (silent_mode.value == true)
+                        return 2;
+
+                    else{
+                        ventilation.value = 4;
+                        desired_temperature.value = 200;
+                        return 1;
+                    }
+                }
+                if (name == "vegetables"){
+                    ventilation.value = 1;
+                    desired_temperature.value = 100;
+                    return 1;
+
+                }
+                if (name == "fish"){
+                    if (silent_mode.value == true)
+                        return 2;
+
+                    else{
+                        ventilation.value = 4;
+                        desired_temperature.value = 250;
+                        return 1;
+                    }
+                }
+                if (name == "pork"){
+                    ventilation.value = 2;
+                    desired_temperature.value = 120;
+                    return 1;
+                }
+            }
+            return 0;
+
+        }
+        int set_cook_mode(std::string name, std::string value){
+            
+            if (cantar_cupthor.get_valoare_greutate() > 0){
+                int cook_feed = set_cook(name);
+                if (cook_feed == 1){
+                    
+                    if (value == "true"){
+                    cookMode.set_status(true,name);
+                    return 1;
+                    }
+
+
+                    else if (value == "false"){
+                    cookMode.set_status(false,name);
+                    return 3;
+                    }
+                }
+                else 
+                if (cook_feed == 2)
+                    return 2;
+                else
+                    return 0;
+            }
+            return 0;
+
+        }
         //SET-SENSOR - nu ar trebui implementat nimic aici
         int set_sensor(std::string name, std::string value){
 
@@ -383,15 +532,50 @@ private:
                 return camera.get_feed();
             }
 
-
+            if (name == "cantar"){
+                return std::to_string(cantar_cupthor.get_valoare_greutate());
+            }
             else{
                 return "";
             }
 
         }
 
+        string get_cook_mode_status(){
+            return std::to_string(cookMode.get_status());
+        }
+
+
+        string get_what_is_cooking(){
+            return cookMode.get_what_is_cooking();
+        }
+
 
     private:
+        class CookMode{
+            public:
+            CookMode(){
+                this -> keep_food_warm = false;
+                this -> what_is_cooking = "";
+            }
+
+
+            bool get_status(){
+                return this -> keep_food_warm;
+            }
+            string get_what_is_cooking(){
+                return this -> what_is_cooking;
+            }
+
+            void set_status(bool value, string name){
+                this -> keep_food_warm = value;
+                this -> what_is_cooking = name;
+            }
+
+            private:
+            bool keep_food_warm;
+            string what_is_cooking;
+        }cookMode;
 
         class ThermostatCupThor{
             public:
@@ -584,8 +768,44 @@ private:
                 }
 
         }camera;
+        // Simulare cantar
+        class Cantar{
+            public:
+
+            Cantar(){
+                this -> valoare_greutate = 0;
+            }
+
+            int get_valoare_greutate(){
 
 
+                unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+                std::default_random_engine generator (seed);
+
+                std::uniform_real_distribution<double> dist_unif (0.0,100.0);
+                std::normal_distribution<double> dist_normal(300,100);
+                double odd = dist_unif(generator);
+                double computed_weight = dist_normal(generator);
+
+                
+                if (odd >= 35){
+                    this -> valoare_greutate  = computed_weight;
+                }  
+                
+                if( this -> valoare_greutate < 100 && this -> valoare_greutate!= 0)	
+                    this -> valoare_greutate  = 100;
+                else
+
+                if (this -> valoare_greutate > 800)
+                    this -> valoare_greutate  = 800;
+
+                return (int)valoare_greutate;
+
+            }
+
+            private:
+                double valoare_greutate;
+        }cantar_cupthor;
         // Defining and instantiating settings.
         struct boolSetting{
             std::string name;
