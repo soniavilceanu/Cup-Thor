@@ -257,7 +257,7 @@ private:
                 valoare = std::stof(value);
 
 
-                if (valoare <= 300 || valoare >= 20)
+                if (valoare <= 300 && valoare >= 20)
                 {
                     desired_temperature.value = valoare;
                     thermostat_cupthor.modifica_temperatura_la(valoare);
