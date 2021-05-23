@@ -418,7 +418,7 @@ private:
 
         }thermostat_cupthor;
 
-
+        //Simulare camera cupthor
         class Camera{
             public:
                 Camera(){
