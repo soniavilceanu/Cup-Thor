@@ -16,6 +16,7 @@
 #include <fstream>
 #include <iterator>
 #include <random>
+#include <regex>
 
 using namespace std;
 using namespace Pistache;
@@ -88,6 +89,12 @@ private:
         Routes::Get(router, "/cook/", Routes::bind(&CupThorEndpoint::getCook, this));
 
         
+
+
+        Routes::Get(router, "/mediaplayer/", Routes::bind(&CupThorEndpoint::getMediaPlayer, this));
+        Routes::Post(router, "/mediaplayer/:mediaCommandName/", Routes::bind(&CupThorEndpoint::setMediaCommand, this));
+        Routes::Post(router, "/mediaplayer/:mediaCommandName/:value", Routes::bind(&CupThorEndpoint::setMediaCommandSong, this));
+
     }
 
     
@@ -102,6 +109,108 @@ private:
     }
 
 // Endpoint to configure one of the Microwave's settings.
+
+    void setMediaCommand(const Rest::Request& request, Http::ResponseWriter response){
+        // You don't know what the parameter content that you receive is, but you should
+        // try to cast it to some data structure. Here, I cast the settingName to string.
+        auto mediaCommandName = request.param(":mediaCommandName").as<std::string>();
+
+        // This is a guard that prevents editing the same value by two concurent threads. 
+        Guard guard(cupthorLock);
+
+
+        // Setting the microwave's setting to value
+        int mediaCommandResponse = cth.set_media_player_command(mediaCommandName);
+
+        // Sending some confirmation or error response.
+        if (mediaCommandResponse == 1) {
+            response.send(Http::Code::Ok, "MediaPlayer is playing");
+        }
+
+        else if(mediaCommandResponse == 2){
+            response.send(Http::Code::Ok, "MediaPlayer is stopping");
+        }
+
+
+        else {
+            response.send(Http::Code::Not_Found, "Eroare media player comanda");
+        }
+
+    }
+
+
+
+
+    void setMediaCommandSong(const Rest::Request& request, Http::ResponseWriter response){
+        // You don't know what the parameter content that you receive is, but you should
+        // try to cast it to some data structure. Here, I cast the settingName to string.
+        auto mediaCommandName = request.param(":mediaCommandName").as<std::string>();
+
+
+        //MediaPlayer accepta doar comanda play daca se ofera si un mp3 in Base64
+        if (mediaCommandName != "play"){
+            response.send(Http::Code::Ok, "The media player only accepts \"play\" if a song in Base64 is provided");
+        }
+
+
+        //Cazul normal
+        else
+        {
+
+        // This is a guard that prevents editing the same value by two concurent threads. 
+        Guard guard(cupthorLock);
+
+        
+        string val = "";
+        if (request.hasParam(":value")) {
+            auto value = request.param(":value");
+            val = value.as<string>();
+        }
+
+        // Setting the microwave's setting to value
+        int mediaCommandResponse = cth.media_player_play_given_song(mediaCommandName, val);
+
+        // Sending some confirmation or error response.
+        if (mediaCommandResponse == 1) {
+            response.send(Http::Code::Ok, "Playing given song");
+        }
+
+
+        else {
+            response.send(Http::Code::Not_Found, "An error has occured when processing the given song");
+        }
+
+        }
+
+    }
+
+
+
+
+    // Setting to get the settings value of one of the configurations of the Microwave
+    void getMediaPlayer(const Rest::Request& request, Http::ResponseWriter response){
+
+        Guard guard(cupthorLock);
+
+        string valueStatus = cth.get_media_player_status();
+
+        if (valueStatus != "") {
+
+            // In this response I also add a couple of headers, describing the server that sent this response, and the way the content is formatted.
+            using namespace Http;
+            response.headers()
+                        .add<Header::Server>("pistache/0.1")
+                        .add<Header::ContentType>(MIME(Text, Plain));
+
+            response.send(Http::Code::Ok, "MediaPlayer is " + valueStatus);
+        }
+        else {
+            response.send(Http::Code::Not_Found, "Eroare media player");
+        }
+    }
+
+
+
 
     // In mod normal nu ar trebui sa se intre pe aceasta sectiune de cod deoarece senzorii nu ar trebui setati ci doar interogati.
     void setCook(const Rest::Request& request, Http::ResponseWriter response){
@@ -320,6 +429,34 @@ private:
 
         this -> desired_temperature.name = "desired_temperature";
         this -> desired_temperature.value = 20;
+        }
+
+
+        int set_media_player_command(std::string name){
+
+            if (name == "play"){
+                media_player.set_status(true);
+                return 1;
+            }
+
+
+            if (name == "stop"){
+                media_player.set_status(false);
+                return 2;
+            }
+
+            return 0;
+        }
+
+
+        int media_player_play_given_song(std::string name, std::string value){
+            
+            if (name == "play"){
+                if (media_player.play(value))
+                    return 1;
+            }
+
+            return 0;
         }
 
         // Setting the value for one of the settings. Hardcoded for the defrosting option
@@ -557,6 +694,9 @@ private:
         string get_what_is_cooking(){
             return cookMode.get_what_is_cooking();
         }
+        string get_media_player_status(){
+            return std::to_string(media_player.get_status());
+        }
 
 
     private:
@@ -584,6 +724,37 @@ private:
             bool keep_food_warm;
             string what_is_cooking;
         }cookMode;
+
+        class MediaPlayer{
+            public:
+                MediaPlayer(){
+                    this -> status = false;
+                }
+
+                bool get_status(){
+                    return this -> status;
+                }
+
+
+                void set_status(bool pornit_sau_oprit){
+                    this -> status = pornit_sau_oprit;
+                }
+
+                bool play(std::string value){
+                    std::regex expresie("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$");
+                    if (regex_match(value, expresie)){
+                        this -> set_status(true);
+                        return true;
+                    }
+
+                    return false;
+                }
+
+            private:
+
+                bool status;
+
+        }media_player;
 
         class ThermostatCupThor{
             public:
