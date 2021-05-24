@@ -346,7 +346,6 @@ private:
         }
 
 
-        //TODO
         int set_media_player_command(std::string name){
 
             if (name == "play"){
