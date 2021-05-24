@@ -236,8 +236,12 @@ private:
             response.send(Http::Code::Ok, "Silent mode is activated! \nTurn it off and try again.");
         }
 
+        else if (setResponse == 3){
+            response.send(Http::Code::Ok, "No food detected in the oven. Not starting for safety measures");
+        }
+
         else {
-            response.send(Http::Code::Not_Found, cookName + " was not found and or '" + cookName + "' was not a valid value ");
+            response.send(Http::Code::Not_Found, cookName + " was not a valid value ");
         }
 
 
@@ -267,9 +271,14 @@ private:
         else if (setResponse == 2){
             response.send(Http::Code::Ok, "Silent mode is activated! \nTurn it off and try again.");
         }
+
+         else if (setResponse == 4){
+            response.send(Http::Code::Ok, "No food detected in the oven. Not starting for safety measures");
+        }
+
         else{
 
-            response.send(Http::Code::Not_Found, "Error! Current cook mode cannot be set");
+            response.send(Http::Code::Not_Found, "Error! Selected cook mode cannot be set");
 
         }
 
@@ -574,6 +583,14 @@ private:
         }
         int set_cook(std::string name){
             if (cantar_cupthor.get_valoare_greutate() > 0){
+
+                int time = 0;
+                int base_time = 10;
+                int chicken_time = 5;
+                int vegetable_time = 2;
+                int fish_time = 4;
+                int pork_time = 7;
+
                 if (name == "chicken"){
 
                     if (silent_mode.value == true){
@@ -582,6 +599,8 @@ private:
                     }
 
                     else{
+                        time = base_time + (chicken_time * (cantar_cupthor.get_valoare_greutate() / 100));
+                        cooking_timer.set(time, name);
                         ventilation.value = 4;
                         desired_temperature.value = 200;
                         cookMode.set_status(false,name);
@@ -589,6 +608,8 @@ private:
                     }
                 }
                 if (name == "vegetables"){
+                    time = base_time + (vegetable_time * (cantar_cupthor.get_valoare_greutate() / 100));
+                    cooking_timer.set(time, name);
                     ventilation.value = 1;
                     desired_temperature.value = 100;
                     cookMode.set_status(false,name);
@@ -602,6 +623,8 @@ private:
                     }
 
                     else{
+                        time = base_time + (fish_time * (cantar_cupthor.get_valoare_greutate() / 100));
+                        cooking_timer.set(time, name);
                         ventilation.value = 4;
                         desired_temperature.value = 250;
                         cookMode.set_status(false,name);
@@ -609,16 +632,24 @@ private:
                     }
                 }
                 if (name == "pork"){
+                    time = base_time + (pork_time * (cantar_cupthor.get_valoare_greutate() / 100));
+                    cooking_timer.set(time, name);
                     ventilation.value = 2;
                     desired_temperature.value = 120;
                     cookMode.set_status(false,name);
                     return 1;
                 }
             }
+
+            if (name == "pork" || name == "chicken" || name == "fish" || name == "vegetables")
+                return 3;
             return 0;
 
         }
         int set_cook_mode(std::string name, std::string value){
+
+            if (value != "true" && value != "false")
+                return 0;
             
             if (cantar_cupthor.get_valoare_greutate() > 0){
                 int cook_feed = set_cook(name);
@@ -638,9 +669,13 @@ private:
                 else 
                 if (cook_feed == 2)
                     return 2;
-                else
-                    return 0;
+                
             }
+
+            if (name == "pork" || name == "chicken" || name == "fish" || name == "vegetables")
+                return 4;
+
+
             return 0;
 
         }
@@ -1007,7 +1042,47 @@ private:
         }cantar_cupthor;
 
 
-        
+        class Timer{
+            public:
+
+                Timer(){
+                    this -> time = 0;
+                    this -> name = "";
+                }
+
+                void set(int value, std::string name_timer){
+                    this -> name = name_timer;
+                    this -> time = value;
+
+                    std::string path = "./Timers/" + this -> name + ".txt";
+                    std::ofstream output(path);
+                    output << "working";
+                    output.close();
+
+
+                    std::thread t(functie_aux, this -> time, this -> name);
+
+                    t.detach();
+
+                    //functie_aux(this -> time, this -> name);
+
+                }
+
+
+            private:
+
+                int time;
+                std::string name;
+
+                static void functie_aux(int time, std::string name){
+                    std::this_thread::sleep_for(std::chrono::seconds(time));
+                    std::string path = "./Timers/" + name + ".txt";
+                    std::ofstream output(path);
+                    output << "done";
+                    output.close();
+
+                }
+        };
 
         // Defining and instantiating settings.
         struct boolSetting{
@@ -1038,6 +1113,9 @@ private:
             std::string name;
             bool value;
         }silent_mode;
+
+
+        Timer cooking_timer;
     };
 
     // Create the lock which prevents concurrent editing of the same variable
