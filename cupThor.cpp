@@ -1086,12 +1086,12 @@ private:
                 int setted;
                 std::string name;
 
-                static void functie_aux(int time, std::string name, int *bikini){
+                static void functie_aux(int time, std::string name, int *timer_is_set){
 
                     while (time > 0){
                         std::this_thread::sleep_for(std::chrono::seconds(1));
                         time = time - 1;
-                        if (*bikini == 0){
+                        if (*timer_is_set == 0){
                             std::string path = "./Timers/" + name + ".txt";
                             std::ofstream output(path);
                             output << "done";
