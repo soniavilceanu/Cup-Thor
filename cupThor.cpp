@@ -15,6 +15,7 @@
 #include <vector>
 #include <fstream>
 #include <iterator>
+#include <regex>
 
 using namespace std;
 using namespace Pistache;
@@ -366,8 +367,8 @@ private:
         int media_player_play_given_song(std::string name, std::string value){
             
             if (name == "play"){
-                media_player.play(value);
-                return 1;
+                if (media_player.play(value))
+                    return 1;
             }
 
             return 0;
@@ -549,9 +550,14 @@ private:
                     this -> status = pornit_sau_oprit;
                 }
 
-                void play(std::string value){
-                    this -> set_status(true);
-                    //TODO
+                bool play(std::string value){
+                    std::regex expresie("^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$");
+                    if (regex_match(value, expresie)){
+                        this -> set_status(true);
+                        return true;
+                    }
+
+                    return false;
                 }
 
             private:
