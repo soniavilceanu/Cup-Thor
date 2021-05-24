@@ -677,7 +677,7 @@ private:
                 return camera.get_feed();
             }
 
-            if (name == "cantar"){
+            if (name == "foodweight"){
                 return std::to_string(cantar_cupthor.get_valoare_greutate());
             }
             else{
@@ -970,7 +970,8 @@ private:
                 if (odd >= 35){
                     this -> valoare_greutate  = computed_weight;
                 }  
-                
+                else
+                    return 0;
                 if( this -> valoare_greutate < 100 && this -> valoare_greutate!= 0)	
                     this -> valoare_greutate  = 100;
                 else
