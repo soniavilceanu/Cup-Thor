@@ -1064,7 +1064,6 @@ private:
 
                     t.detach();
 
-                    //functie_aux(this -> time, this -> name);
 
                 }
 
@@ -1083,6 +1082,51 @@ private:
 
                 }
         };
+
+
+        //TODO  TREBUIE APELATA SI IN CONSTRUCTORUL CUP-THORULUI CU alaram.set_alarm()
+        //senzorii importanti ar fi temperatura si senzorul de fum
+        class Alarma{
+            public:
+                void set_alarm(){
+                    std::thread t(functie_aux);
+                    t.detach();
+                }
+
+            private:
+                static void functie_aux(){
+                    std::this_thread::sleep_for(std::chrono::seconds(1));
+                    std::string path = "./Alarm/firealarm.txt";
+                    std::ofstream output(path);
+
+                    while (true){
+                        int senzor = 0;
+                        int dummy_utilitati = 1;
+
+                        if (senzor == 1)
+                            output << "The alarm has been triggerd";
+                            dummy_utilitati = 0;
+                            break;
+                    }
+                    
+                    output.close();
+                    //ceva gen exit(0) gen iesire fortata sa se inchida
+                }
+        }alarm;
+
+
+        //TODO Asta ar trebui apelat la alarma sa se vada statusul
+        //Ar fi frumos sa-i faceti path-ul pt get ca la ceilalti senzori
+        class SenzorFum{
+            public:
+                bool get_status_senzor(){
+                    //GENERARE UNIFORMA
+                    //DE LUAT SANSE 1% sau 0.1% sa se activeze
+                    //sansa = 0 => nu se activeaza
+                    bool sansa = 0;
+                    return sansa;
+                }
+        }senzor_fum;
 
         // Defining and instantiating settings.
         struct boolSetting{
