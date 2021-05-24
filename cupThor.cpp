@@ -448,6 +448,15 @@ private:
 
         this -> desired_temperature.name = "desired_temperature";
         this -> desired_temperature.value = 20;
+
+        this -> start_cooking_hour.name = "start_cooking_hour";
+        this -> start_cooking_hour.value = "";
+
+        this -> end_cooking_hour.name = "start_cooking_hour";
+        this -> end_cooking_hour.value = "";
+
+        this -> is_cooking.name = "is_cooking";
+        this -> is_cooking.value = false;
         }
 
 
@@ -579,6 +588,42 @@ private:
                 }
             }
 
+            if (name == "start_cooking_hour"){
+                start_cooking_hour.value = value;
+                auto actual_time = std::chrono::system_clock::now();
+                std::string str_act_time = timePointAsString(actual_time);
+                std::string ora = str_act_time.substr(3, str_act_time.find(":")).substr(0, str_act_time.substr(3, str_act_time.find(":")).find(":")).substr( str_act_time.substr(3, str_act_time.find(":")).substr(0, str_act_time.substr(3, str_act_time.find(":")).find(":")).length() - 2 );
+                std::string min = str_act_time.substr(3, str_act_time.find(":")).substr(5, str_act_time.substr(3, str_act_time.find(":")).find(":")).substr( str_act_time.substr(3, str_act_time.find(":")).substr(5, str_act_time.substr(3, str_act_time.find(":")).find(":")).length() - 2 );
+                std::string ora_actuala = ora + ":" + min;
+                if (ora_actuala >= value)
+                    is_cooking.value = true;
+                else
+                    is_cooking.value = false;
+                return 1;
+            }
+
+            if (name == "end_cooking_hour"){
+                start_cooking_hour.value = value;
+                auto actual_time = std::chrono::system_clock::now();
+                std::string str_act_time = timePointAsString(actual_time);
+                std::string ora = str_act_time.substr(3, str_act_time.find(":")).substr(0, str_act_time.substr(3, str_act_time.find(":")).find(":")).substr( str_act_time.substr(3, str_act_time.find(":")).substr(0, str_act_time.substr(3, str_act_time.find(":")).find(":")).length() - 2 );
+                std::string min = str_act_time.substr(3, str_act_time.find(":")).substr(5, str_act_time.substr(3, str_act_time.find(":")).find(":")).substr( str_act_time.substr(3, str_act_time.find(":")).substr(5, str_act_time.substr(3, str_act_time.find(":")).find(":")).length() - 2 );
+                std::string ora_actuala = ora + ":" + min;
+                if (ora_actuala <= value)
+                    is_cooking.value = true;
+                else
+                    is_cooking.value = false;
+                return 1;
+            }
+
+            if (name == "is_cooking"){
+                if (value == "true")
+                    is_cooking.value = true;
+                else
+                    is_cooking.value = false;
+                return 1;
+            }
+
             return 0;
         }
         int set_cook(std::string name){
@@ -679,6 +724,13 @@ private:
             return 0;
 
         }
+        static std::string timePointAsString(const std::chrono::system_clock::time_point& tp) {
+            std::time_t t = std::chrono::system_clock::to_time_t(tp);
+            std::string ts = std::ctime(&t);
+            ts.resize(ts.size()-1);
+            return ts;
+            }           
+
         //SET-SENSOR - nu ar trebui implementat nimic aici
         int set_sensor(std::string name, std::string value){
 
@@ -711,8 +763,18 @@ private:
                 return std::to_string(silent_mode.value);
             }
 
-            
+            else if (name == "start_cooking_hour"){
+                return start_cooking_hour.value;
+            }
 
+            else if (name == "end_cooking_hour"){
+                return end_cooking_hour.value;
+            }
+
+            else if (name== "is_cooking"){
+                return std::to_string(is_cooking.value);
+            }
+            
             else{
                 return "";
             }
@@ -1158,8 +1220,24 @@ private:
             bool value;
         }silent_mode;
 
+        struct start_cooking_hourSetting{
+            std::string name;
+            std::string value;
+        }start_cooking_hour;
+
+        struct end_cooking_hourSetting{
+            std::string name;
+            std::string value;
+        }end_cooking_hour;
+
+        struct is_cookingSetting{
+            std::string name;
+            bool value;
+        }is_cooking;
 
         Timer cooking_timer;
+
+        
     };
 
     // Create the lock which prevents concurrent editing of the same variable
