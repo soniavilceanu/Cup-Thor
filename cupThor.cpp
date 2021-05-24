@@ -1048,11 +1048,21 @@ private:
                 Timer(){
                     this -> time = 0;
                     this -> name = "";
+                    this -> setted = 0;
+                    this -> pinter_aux_timer = &(this -> setted);
                 }
 
                 void set(int value, std::string name_timer){
                     this -> name = name_timer;
                     this -> time = value;
+                    
+                    if (this -> setted == 1){
+                        this -> setted = 0 ;
+                        std::this_thread::sleep_for(std::chrono::seconds(1));
+                        this -> setted = 1;
+                    }
+                    else
+                        this -> setted = 1;
 
                     std::string path = "./Timers/" + this -> name + ".txt";
                     std::ofstream output(path);
@@ -1060,7 +1070,8 @@ private:
                     output.close();
 
 
-                    std::thread t(functie_aux, this -> time, this -> name);
+                    std::thread t(functie_aux, this -> time, this -> name, this -> pinter_aux_timer);
+
 
                     t.detach();
 
@@ -1070,15 +1081,30 @@ private:
 
             private:
 
+                int *pinter_aux_timer;
                 int time;
+                int setted;
                 std::string name;
 
-                static void functie_aux(int time, std::string name){
-                    std::this_thread::sleep_for(std::chrono::seconds(time));
-                    std::string path = "./Timers/" + name + ".txt";
-                    std::ofstream output(path);
-                    output << "done";
-                    output.close();
+                static void functie_aux(int time, std::string name, int *bikini){
+
+                    while (time > 0){
+                        std::this_thread::sleep_for(std::chrono::seconds(1));
+                        time = time - 1;
+                        if (*bikini == 0){
+                            std::string path = "./Timers/" + name + ".txt";
+                            std::ofstream output(path);
+                            output << "done";
+                            break;
+                            }
+                        
+                        if (time <= 0)
+                            {
+                                std::string path = "./Timers/" + name + ".txt";
+                                std::ofstream output(path);
+                                output << "done";
+                            }
+                    }
 
                 }
         };
