@@ -132,6 +132,10 @@ private:
             response.send(Http::Code::Ok, "MediaPlayer is stopping");
         }
 
+        else if(mediaCommandResponse == 3){
+            response.send(Http::Code::Ok, "Cant play in silent mode. Deactivate it first");
+        }
+
 
         else {
             response.send(Http::Code::Not_Found, "Eroare media player comanda");
@@ -174,6 +178,11 @@ private:
         // Sending some confirmation or error response.
         if (mediaCommandResponse == 1) {
             response.send(Http::Code::Ok, "Playing given song");
+        }
+
+
+        else if (mediaCommandResponse == 3){
+            response.send(Http::Code::Ok, "Cant play in silent mode. Deactivate it first");
         }
 
 
@@ -436,6 +445,10 @@ private:
         int set_media_player_command(std::string name){
 
             if (name == "play"){
+
+                if (silent_mode.value == true)
+                    return 3;
+
                 media_player.set_status(true);
                 return 1;
             }
@@ -451,8 +464,12 @@ private:
 
 
         int media_player_play_given_song(std::string name, std::string value){
-            
+
             if (name == "play"){
+
+                if (silent_mode.value == true)
+                    return 3;
+
                 if (media_player.play(value))
                     return 1;
             }
@@ -539,6 +556,7 @@ private:
                 if (value == "true"){
                     silent_mode.value = true;
                     ambient_light.value = false;
+                    media_player.set_status(false);
                     if (ventilation.value > 2)
                         ventilation.value = 2;
 
