@@ -726,13 +726,18 @@ private:
                 return std::to_string(thermostat_cupthor.get_temperatura());
             }
 
-
             if (name == "camera"){
                 return camera.get_feed();
             }
 
             if (name == "foodweight"){
                 return std::to_string(cantar_cupthor.get_valoare_greutate());
+            }
+            if (name == "smoke_sensor"){
+                return std::to_string(senzor_fum.get_status_senzor());
+            }
+            if (name == "water_jet"){
+                return std::to_string(water.value);
             }
             else{
                 return "";
@@ -1141,7 +1146,7 @@ private:
         }alarm;
 
 
-        //TODO Asta ar trebui apelat la alarma sa se vada statusul
+        
         //Ar fi frumos sa-i faceti path-ul pt get ca la ceilalti senzori
         class SenzorFum{
             public:
@@ -1149,7 +1154,12 @@ private:
                     //GENERARE UNIFORMA
                     //DE LUAT SANSE 1% sau 0.1% sa se activeze
                     //sansa = 0 => nu se activeaza
-                    bool sansa = 0;
+                    bool sansa;
+                    int nr = rand() % 1000;
+                    if(nr == 0)
+                        sansa = 1;
+                    else
+                        sansa = 0;
                     return sansa;
                 }
         }senzor_fum;
@@ -1183,6 +1193,11 @@ private:
             std::string name;
             bool value;
         }silent_mode;
+
+        struct water_jet{
+            std::string name;
+            bool value;
+        }water;
 
 
         Timer cooking_timer;
