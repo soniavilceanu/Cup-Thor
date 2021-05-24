@@ -1147,7 +1147,7 @@ private:
 
 
         
-        //Ar fi frumos sa-i faceti path-ul pt get ca la ceilalti senzori
+        
         class SenzorFum{
             public:
                 bool get_status_senzor(){
