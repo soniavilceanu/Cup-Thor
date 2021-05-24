@@ -139,11 +139,11 @@ private:
 
         if (setResponse == 1){
 
-            response.send(Http::Code::Ok, "Cook mode was set to " + cookName + "with keep-food-warm");
+            response.send(Http::Code::Ok, "Cook mode was set to " + cookName + " with:- keep-food-warm");
 
         }
         else if (setResponse == 3){
-            response.send(Http::Code::Ok, "Cook mode was set to " + cookName + "wihtout keep-food-warm");
+            response.send(Http::Code::Ok, "Cook mode was set to " + cookName + " without:- keep-food-warm");
         }
         else if (setResponse == 2){
             response.send(Http::Code::Ok, "Silent mode is activated! \nTurn it off and try again.");
@@ -159,7 +159,7 @@ private:
 
         Guard guard(cupthorLock);
 
-        string cook_mode_checker = cth.get_cook_mode_status();
+        bool cook_mode_checker = cth.get_cook_mode_status();
         string whats_cook = cth.get_what_is_cooking();
 
         if (whats_cook != "") {
@@ -169,13 +169,13 @@ private:
             response.headers()
                         .add<Header::Server>("pistache/0.1")
                         .add<Header::ContentType>(MIME(Text, Plain));
-            if (cook_mode_checker != "")
+            if (cook_mode_checker == true)
                 response.send(Http::Code::Ok, "Currently cooking: " + whats_cook + " keep-warm-food:ON");
             else
                 response.send(Http::Code::Ok, "Currently cooking: " + whats_cook + " keep-warm-food:OFF");
         }
         else {
-            response.send(Http::Code::Not_Found, + " was not found");
+            response.send(Http::Code::Not_Found, + "Nothing is cooking right now");
         }
 
     }
@@ -420,34 +420,42 @@ private:
             if (cantar_cupthor.get_valoare_greutate() > 0){
                 if (name == "chicken"){
 
-                    if (silent_mode.value == true)
+                    if (silent_mode.value == true){
                         return 2;
+                        cookMode.set_status(false,"");
+                    }
 
                     else{
                         ventilation.value = 4;
                         desired_temperature.value = 200;
+                        cookMode.set_status(false,name);
                         return 1;
                     }
                 }
                 if (name == "vegetables"){
                     ventilation.value = 1;
                     desired_temperature.value = 100;
+                    cookMode.set_status(false,name);
                     return 1;
 
                 }
                 if (name == "fish"){
-                    if (silent_mode.value == true)
+                    if (silent_mode.value == true){
                         return 2;
+                        cookMode.set_status(false,"");
+                    }
 
                     else{
                         ventilation.value = 4;
                         desired_temperature.value = 250;
+                        cookMode.set_status(false,name);
                         return 1;
                     }
                 }
                 if (name == "pork"){
                     ventilation.value = 2;
                     desired_temperature.value = 120;
+                    cookMode.set_status(false,name);
                     return 1;
                 }
             }
@@ -541,8 +549,8 @@ private:
 
         }
 
-        string get_cook_mode_status(){
-            return std::to_string(cookMode.get_status());
+        bool get_cook_mode_status(){
+            return cookMode.get_status();
         }
 
 
