@@ -81,8 +81,8 @@ private:
         Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&CupThorEndpoint::setSetting, this));
         Routes::Get(router, "/settings/:settingName/", Routes::bind(&CupThorEndpoint::getSetting, this));
 
-
-        Routes::Post(router, "/sensors/:sensorName/:value", Routes::bind(&CupThorEndpoint::setSensor, this));
+        //Nu ar trebui sa se sa seteze senzorii
+        //Routes::Post(router, "/sensors/:sensorName/:value", Routes::bind(&CupThorEndpoint::setSensor, this));
         Routes::Get(router, "/sensors/:sensorName/", Routes::bind(&CupThorEndpoint::getSensor, this));
                 
         Routes::Post(router, "/cook/:cookName/", Routes::bind(&CupThorEndpoint::setCook, this));
@@ -726,18 +726,13 @@ private:
                 return std::to_string(thermostat_cupthor.get_temperatura());
             }
 
+
             if (name == "camera"){
                 return camera.get_feed();
             }
 
             if (name == "foodweight"){
                 return std::to_string(cantar_cupthor.get_valoare_greutate());
-            }
-            if (name == "smoke_sensor"){
-                return std::to_string(senzor_fum.get_status_senzor());
-            }
-            if (name == "water_jet"){
-                return std::to_string(water.value);
             }
             else{
                 return "";
@@ -1091,12 +1086,12 @@ private:
                 int setted;
                 std::string name;
 
-                static void functie_aux(int time, std::string name, int *timer_is_set){
+                static void functie_aux(int time, std::string name, int *bikini){
 
                     while (time > 0){
                         std::this_thread::sleep_for(std::chrono::seconds(1));
                         time = time - 1;
-                        if (*timer_is_set == 0){
+                        if (*bikini == 0){
                             std::string path = "./Timers/" + name + ".txt";
                             std::ofstream output(path);
                             output << "done";
@@ -1146,20 +1141,15 @@ private:
         }alarm;
 
 
-        
-        
+        //TODO Asta ar trebui apelat la alarma sa se vada statusul
+        //Ar fi frumos sa-i faceti path-ul pt get ca la ceilalti senzori
         class SenzorFum{
             public:
                 bool get_status_senzor(){
                     //GENERARE UNIFORMA
                     //DE LUAT SANSE 1% sau 0.1% sa se activeze
                     //sansa = 0 => nu se activeaza
-                    bool sansa;
-                    int nr = rand() % 1000;
-                    if(nr == 0)
-                        sansa = 1;
-                    else
-                        sansa = 0;
+                    bool sansa = 0;
                     return sansa;
                 }
         }senzor_fum;
@@ -1193,11 +1183,6 @@ private:
             std::string name;
             bool value;
         }silent_mode;
-
-        struct water_jet{
-            std::string name;
-            bool value;
-        }water;
 
 
         Timer cooking_timer;
