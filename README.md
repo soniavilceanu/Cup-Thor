@@ -1,8 +1,8 @@
 # Cup-Thor
 
-###Echipa - Ariton Cosmin, Vilceanu Sonia, Marila Mircea, Plamadeala Cristian, Bujor Marian, Vasu Ionut
+### Echipa - Ariton Cosmin, Vilceanu Sonia, Marila Mircea, Plamadeala Cristian, Bujor Marian, Vasu Ionut
 
-##Aplicatia are urmatoarele functionalitati:
+## Aplicatia are urmatoarele functionalitati:
 
 - reglare temperatura
 - bec ambiental
