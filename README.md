@@ -1,6 +1,6 @@
 # Cup-Thor
 
-### Echipa - Ariton Cosmin, Vilceanu Sonia, Marila Mircea, Plamadeala Cristian, Bujor Marian, Vasu Ionut
+### Echipa - Ariton Cosmin, Vîlceanu Sonia, Mărilă Mircea, Plămădeală Cristian, Bujor Marian, Vasu Ionuț
 
 ## Aplicatia are urmatoarele functionalitati:
 
