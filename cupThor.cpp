@@ -81,8 +81,8 @@ private:
         Routes::Post(router, "/settings/:settingName/:value", Routes::bind(&CupThorEndpoint::setSetting, this));
         Routes::Get(router, "/settings/:settingName/", Routes::bind(&CupThorEndpoint::getSetting, this));
 
-
-        Routes::Post(router, "/sensors/:sensorName/:value", Routes::bind(&CupThorEndpoint::setSensor, this));
+        //Nu ar trebui sa se sa seteze senzorii
+        //Routes::Post(router, "/sensors/:sensorName/:value", Routes::bind(&CupThorEndpoint::setSensor, this));
         Routes::Get(router, "/sensors/:sensorName/", Routes::bind(&CupThorEndpoint::getSensor, this));
                 
         Routes::Post(router, "/cook/:cookName/", Routes::bind(&CupThorEndpoint::setCook, this));
