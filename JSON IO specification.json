@@ -50,7 +50,7 @@
             },
             {
                 "name":"Oven cooking parameter value",
-                "description": "Parameter value for the cooking mode chosen",
+                "description": "Parameter value for the cooking mode chosen. It will choose settings and output a file named after the food with \"working\" in it while it works or \"done\" if it finishes(the output done will take some time because it simulates cooking)",
                 "token-type":"string",
                 "byte-size":10,
                 "regex-rule": "^chicken$|^pork$|^vegetables$|^fish$", // Correct inputs will be: [chicken, pork, vegetables, fish]
@@ -150,10 +150,40 @@
                 "optional": false
             }
             ]
+        },
+
+
+        "cook":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -XGET 'http://127.0.0.1:8080/'",
+            "buffer-tokens":[
+            {
+                "name":"Oven sensors",
+                "description":"Information on what is cooking",
+                "token-type":"string", 
+                "byte-size":4, 
+                "regex-rule": "^cook$",
+                "optional": false
+            }
+            ]
+        },
+		
+
+        "mediaplayer":{
+            "token-delimitators": "",
+            "protocol": "HTTP",
+            "prefix": "curl -XGET 'http://127.0.0.1:8080/'",
+            "buffer-tokens":[
+            {
+                "name":"MediaPlayer status",
+                "description":"Get current status of mediaplayer",
+                "token-type":"string", 
+                "byte-size":11, 
+                "regex-rule": "^mediaplayer$",
+                "optional": false
+            }
+            ]
         }
-		
-	
-	
-		
     }
 }
