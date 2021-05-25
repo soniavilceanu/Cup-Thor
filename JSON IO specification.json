@@ -1,7 +1,7 @@
 {
     "device-name": "Cup-Thor App",
     "device-type": "Oven",
-    "buffers-count": 1,
+    "buffers-count": 7,
     "input-buffers":{
         "settings":{
             "token-delimitators": "",
@@ -13,7 +13,7 @@
                 "description":"From here you can choose different settings for the oven",
                 "token-type":"string", 
                 "byte-size":8,
-                "regex-rule": "^settings$", // Correct input will be: [settings]
+                "regex-rule": "^settings$",
                 "optional": false
             },
             {
@@ -21,7 +21,7 @@
                 "description": "Parameter key for the setting chosen",
                 "token-type":"string",
                 "byte-size":19,
-                "regex-rule": "^defrost$|^desired_temperature$|^ambient_light$|^ventilation$|^silent_mode$", // Correct inputs will be: [defrost]
+                "regex-rule": "^defrost$|^desired_temperature$|^ambient_light$|^ventilation$|^silent_mode$",
                 "optional": false
             },
             {
@@ -29,7 +29,7 @@
                 "description": "Parameter value for the setting chosen",
                 "token-type":"string",
                 "byte-size":4,
-                "regex-rule": "^true$|^false$|^2[0-9][0-9]?$|^1[0-9][0-9]$|^300$|^[1-6]$", // Correct inputs will be: [true, false, number between 20 and 300, number between 1 and 6]
+                "regex-rule": "^true$|^false$|^2[0-9][0-9]?$|^1[0-9][0-9]$|^300$|^[1-6]$", 
                 "optional": false
             }
             ]
@@ -45,7 +45,7 @@
                 "description":"From here you can choose different cooking predefined cooking modes",
                 "token-type":"string", 
                 "byte-size":4,
-                "regex-rule": "^cook$", // Correct input will be: [cook]
+                "regex-rule": "^cook$", 
                 "optional": false
             },
             {
@@ -53,7 +53,7 @@
                 "description": "Parameter value for the cooking mode chosen. It will choose settings and output a file named after the food with \"working\" in it while it works or \"done\" if it finishes(the output done will take some time because it simulates cooking)",
                 "token-type":"string",
                 "byte-size":10,
-                "regex-rule": "^chicken$|^pork$|^vegetables$|^fish$", // Correct inputs will be: [chicken, pork, vegetables, fish]
+                "regex-rule": "^chicken$|^pork$|^vegetables$|^fish$",
                 "optional": false
             },
             {
@@ -61,7 +61,7 @@
                 "description": "Parameter value for keeping the food heated after the oven is done, default is false",
                 "token-type":"string",
                 "byte-size":4,
-                "regex-rule": "^true$|^false$$", // Correct inputs will be: [true, false]
+                "regex-rule": "^true$|^false$$",
                 "optional": true
             }
             ]
@@ -77,7 +77,7 @@
                 "description":"",
                 "token-type":"string", 
                 "byte-size":8,
-                "regex-rule": "^mediaplayer$", // Correct input will be: [mediaplayer]
+                "regex-rule": "^mediaplayer$",
                 "optional": false
             },
             {
@@ -85,7 +85,7 @@
                 "description": "Parameter key for the setting chosen",
                 "token-type":"string",
                 "byte-size":4,
-                "regex-rule": "^play$|^stop$", // Correct inputs will be: [play, stop]
+                "regex-rule": "^play$|^stop$", 
                 "optional": false
             },
             {
@@ -93,7 +93,7 @@
                 "description": "Parameter value for the setting chosen",
                 "token-type":"string",
                 "byte-size":5000,
-                "regex-rule": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$", // Correct inputs will be: a formated string in Base64 (should be a song)
+                "regex-rule": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{4})$", 
                 "optional": false
             }
             ]
@@ -135,7 +135,7 @@
             "buffer-tokens":[
             {
                 "name":"Oven sensors",
-                "description":"From here you can further choose wich sensor ",
+                "description":"From here you can further choose wich sensor. Camera sensor will read a file from CameraFakeInput and put a fistorted version of it in OutputCamera flder to simulate a real feed",
                 "token-type":"string", 
                 "byte-size":8, 
                 "regex-rule": "^settings$",
