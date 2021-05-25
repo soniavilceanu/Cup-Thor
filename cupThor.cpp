@@ -44,7 +44,7 @@ namespace Generic {
 
 }
 
-// Definition of the MicrowaveEnpoint class 
+// Definition of the OvenEnpoint class 
 class CupThorEndpoint {
 public:
     explicit CupThorEndpoint(Address addr)
@@ -109,7 +109,7 @@ private:
         response.send(Http::Code::Ok);
     }
 
-// Endpoint to configure one of the Microwave's settings.
+// Endpoint to configure one of the Oven's settings.
 
     void setMediaCommand(const Rest::Request& request, Http::ResponseWriter response){
         // You don't know what the parameter content that you receive is, but you should
@@ -120,7 +120,7 @@ private:
         Guard guard(cupthorLock);
 
 
-        // Setting the microwave's setting to value
+        // Setting the Oven's setting to value
         int mediaCommandResponse = cth.set_media_player_command(mediaCommandName);
 
         // Sending some confirmation or error response.
@@ -172,7 +172,7 @@ private:
             val = value.as<string>();
         }
 
-        // Setting the microwave's setting to value
+        // Setting the Oven's setting to value
         int mediaCommandResponse = cth.media_player_play_given_song(mediaCommandName, val);
 
         // Sending some confirmation or error response.
@@ -197,7 +197,7 @@ private:
 
 
 
-    // Setting to get the settings value of one of the configurations of the Microwave
+    // Setting to get the settings value of one of the configurations of the Oven
     void getMediaPlayer(const Rest::Request& request, Http::ResponseWriter response){
 
         Guard guard(cupthorLock);
@@ -326,7 +326,7 @@ private:
             val = value.as<string>();
         }
 
-        // Setting the microwave's setting to value
+        // Setting the Oven's setting to value
         int setResponse = cth.set_sensor(sensorName, val);
 
         // Sending some confirmation or error response.
@@ -344,7 +344,7 @@ private:
 
 
 
-    // Setting to get the settings value of one of the configurations of the Microwave
+    // Setting to get the settings value of one of the configurations of the Oven
     void getSensor(const Rest::Request& request, Http::ResponseWriter response){
         auto sensorName = request.param(":sensorName").as<std::string>();
 
@@ -370,7 +370,7 @@ private:
 
 
 
-    // Endpoint to configure one of the Microwave's settings.
+    // Endpoint to configure one of the Oven's settings.
     void setSetting(const Rest::Request& request, Http::ResponseWriter response){
         // You don't know what the parameter content that you receive is, but you should
         // try to cast it to some data structure. Here, I cast the settingName to string.
@@ -386,7 +386,7 @@ private:
             val = value.as<string>();
         }
 
-        // Setting the microwave's setting to value
+        // Setting the Oven's setting to value
         int setResponse = cth.set_setting(settingName, val);
 
         // Sending some confirmation or error response.
@@ -409,7 +409,7 @@ private:
 
     }
 
-    // Setting to get the settings value of one of the configurations of the Microwave
+    // Setting to get the settings value of one of the configurations of the Oven
     void getSetting(const Rest::Request& request, Http::ResponseWriter response){
         auto settingName = request.param(":settingName").as<std::string>();
 
@@ -432,7 +432,7 @@ private:
         }
     }
 
-    // Defining the class of the Microwave. It should model the entire configuration of the Microwave
+    // Defining the class of the Oven. It should model the entire configuration of the Oven
     class CupThor {
     public:
         explicit CupThor(){ 
@@ -734,6 +734,14 @@ private:
             if (name == "foodweight"){
                 return std::to_string(cantar_cupthor.get_valoare_greutate());
             }
+
+            if (name == "smoke_sensor"){
+                return std::to_string(senzor_fum.get_status_senzor());
+            }
+            if (name == "water_jet"){
+                return std::to_string(water.value);
+            }
+
             else{
                 return "";
             }
@@ -1146,10 +1154,13 @@ private:
         class SenzorFum{
             public:
                 bool get_status_senzor(){
-                    //GENERARE UNIFORMA
-                    //DE LUAT SANSE 1% sau 0.1% sa se activeze
-                    //sansa = 0 => nu se activeaza
-                    bool sansa = 0;
+                    bool sansa;
+                    int nr = rand() % 1000;
+                    if(nr == 0)
+                        sansa = 1;
+                    else
+                        sansa = 0;
+                    sansa = 0 ; //Pentru motive didactice
                     return sansa;
                 }
         }senzor_fum;
@@ -1185,6 +1196,11 @@ private:
         }silent_mode;
 
 
+        struct water_jet{
+            std::string name;
+            bool value;
+        }water;
+
         Timer cooking_timer;
     };
 
@@ -1193,7 +1209,7 @@ private:
     using Guard = std::lock_guard<Lock>;
     Lock cupthorLock;
 
-    // Instance of the microwave model
+    // Instance of the Oven model
     CupThor cth;
 
     // Defining the httpEndpoint and a router.
